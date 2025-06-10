@@ -5,11 +5,11 @@ namespace DormitoryManagement
 {
     public enum EquipName
     {
-        Refrigerator = 1,
-        Table = 2,
-        Chair = 3,
-        Bed = 4,
-        Closet = 5
+        Refrigerator = 001,
+        Table = 002,
+        Chair = 003,
+        Bed = 004,
+        Closet = 005
     }
 
     public enum Status
@@ -116,8 +116,8 @@ namespace DormitoryManagement
             RoomNumber = roomNumber;
             Floor = floor;
             Capacity = capacity;
-            Equipments = equipments ?? new List<Equipment>();
-            Students = students ?? new List<Student>();
+            Equipments = equipments new List<Equipment>();
+            Students = students new List<Student>();
         }
     }
 
