@@ -33,4 +33,21 @@ namespace DormitoryManagement
             AssignedStudentNationalCode = studentNationalCode;
         }
     }
+    public class Room
+    {
+        public int RoomNumber { get; private set; }
+        public int Floor { get; set; }
+        public int Capacity { get; set; }
+        public List<Equipment> Equipments { get; set; }
+        public List<Student> Students { get; set; }
+
+        public Room(int roomNumber, int floor, int capacity, List<Equipment> equipments, List<Student> students)
+        {
+            RoomNumber = roomNumber;
+            Floor = floor;
+            Capacity = capacity;
+            Equipments = equipments ?? new List<Equipment>();
+            Students = students ?? new List<Student>();
+        }
+    }
 }
