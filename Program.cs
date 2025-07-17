@@ -109,11 +109,52 @@ namespace DormitoryManagement
                         RemoveDormManager(); break;
                     case "3":
                         EditDormManager(); break;
+                    case "4":
+                        ViewDormManagers();
                     case "0": return;
                     default:
                         Console.WriteLine("Invalid input. Press Enter to try again.");
                         Console.ReadKey();
                         break;
+
+                }
+            }
+        }
+
+
+        static void BlockManagerManagementMenu()
+        {
+            while(true)
+            {
+                Console.Clear();
+                Console.WriteLine("==== Block Manager Management ====");
+                Console.WriteLine("1. Add New Block Manager (from Students)");
+                Console.WriteLine("2. Remove Block Manager");
+                Console.WriteLine("3. Change Block Manager");
+                Console.WriteLine("4. View All Block Managers");
+                Console.WriteLine("0. Back to People Management Menu");
+
+
+                Console.Write("\nSelect an option: ");
+                string input = Console.ReadLine();
+
+
+                switch (input)
+                {
+                    case "1":
+                        AddBlockManager(); break;
+                    case "2":
+                        RemoveBlockManager(); break;
+                    case "3":
+                        ChangeBlockManager(); break;
+                    case "4":
+                        ViewBlockManagers(); break;
+                        case "0": return;
+                    default:
+                        Console.WriteLine("Invalid input. Press Enter to try again.");
+                        Console.ReadKey();
+                        break;
+
 
                 }
             }
