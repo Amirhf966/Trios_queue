@@ -85,3 +85,36 @@ namespace DormitoryManagement
                 }
             }
         }
+
+        static void DormManagerManagementMenu()
+        {
+            while(true)
+            {
+                Console.Clear();
+                Console.WriteLine("==== Dorm Manager Management ====");
+                Console.WriteLine("1. Add New Dorm Manager");
+                Console.WriteLine("2. Remove Dorm Manager");
+                Console.WriteLine("3. Edit Dorm Manager Information");
+                Console.WriteLine("4. View All Dorm Managers");
+                Console.WriteLine("0. Back to People Management Menu");
+
+
+                Console.Write("\nSelect an option: ");
+                string input = Console.ReadLine();
+                switch (input)
+                {
+                    case "1":
+                        AddDormManager(); break;
+                    case "2":
+                        RemoveDormManager(); break;
+                    case "3":
+                        EditDormManager(); break;
+                    case "0": return;
+                    default:
+                        Console.WriteLine("Invalid input. Press Enter to try again.");
+                        Console.ReadKey();
+                        break;
+
+                }
+            }
+        }
