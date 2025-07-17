@@ -50,4 +50,38 @@ namespace DormitoryManagement
             Students = students ?? new List<Student>();
         }
     }
-}
+
+
+    //********************************************************************************
+    static void PeopleManagementMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("***People Magement***");
+                Console.WriteLine("1. Dorm Manager Management");
+                Console.WriteLine("2. Block Manager Management");
+                Console.WriteLine("3. Student Management");
+                Console.WriteLine("0. Back to Main Menu");
+
+                Console.Write("\nSelect an option: ");
+                string input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        DormitoryManagementMenu(); break;
+                    case "2":
+                        BlockManagerManagementMenu(); break;
+                    case "3":
+                        StudentManagementMenu(); break;
+                    case "0":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid input. Press Enter to try again.");
+                        Console.ReadKey();
+                        break;
+
+                }
+            }
+        }
