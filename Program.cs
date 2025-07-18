@@ -486,4 +486,141 @@ namespace DormitoryManagement
             Console.Write("\nPress Enter to return to Block Manager Menu...");
             Console.ReadKey();
         }
+
+
+        
+        static void AddStudent()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Add New Student ***");
+
+            Console.Write("First Name: ");
+            string fName = Console.ReadLine();
+
+            Console.Write("Last Name: ");
+            string lName = Console.ReadLine();
+
+            Console.Write("Student Id: ");
+            int nationalCode = int.Parse(Console.ReadLine());
+
+            Console.Write("Phone number: ");
+            int nationalCode = int.Parse(Console.ReadLine());
+
+            Console.Write("Address: ");
+            string adress = Console.ReadLine();
+
+
+            students_list.Add(new Student(fName, lName, nationalCode, phoneNumber, address, studentId, 0, 0, "Not Assigned"));
+            Console.WriteLine("Student added successfully.");
+            Console.Write("\nPress Enter to return to Student Menu...");
+            Console.ReadKey();
+        }
+        
+
+        static void RemoveStudent()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Remove Student ***");
+
+            Console.Write("Enter Student Id to Remove: ");
+            if (int.TryParse(Console.ReadLine(), out int studentIdToRemove))
+            {
+                Student target = students_list.Find(s => s.Id == studentIdToRemove);
+                if (target != null)
+                {
+                    students_list.Remove(target);
+                    Console.WriteLine("Student removed successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Student not found !!!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid Student Id. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Student Menu...");
+            Console.ReadKey();
+        }
+
+
+        static void EditStudent()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Edit Student Information ***");
+
+            Console.Write("Enter Student ID to Edit: ");
+            if (int.TryParse(Console.ReadLine(), out int studentIdToEdit))
+            {
+                Student target = students_list.Find(s => s.Id == studentIdToEdit);
+                if (target != null)
+                {
+                    Console.WriteLine($"Editing information for {target.FName} {target.LName} (Id: {target.Id})");
+
+                    Console.Write($"New Phone Number (current: {target.PhoneNumber}): ");
+                    if (int.TryParse(Console.ReadLine(), out int newPhoneNumber))
+                    {
+                        target.PhoneNumber = newPhoneNumber;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input. Phone number not changed.");
+                    }
+
+                    Console.Write($"New Address (current: {target.Address}): ");
+                    target.Address = Console.ReadLine();
+
+                    Console.WriteLine("Student information updated successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Student not found !!!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid Student ID. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Student Menu...");
+            Console.ReadKey();
+        }
+
+
+        static void SearchStudent()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Search Student ***");
+
+            Console.Write("Enter Student Name or Student Id to Search: ");
+            string searchTerm = Console.ReadLine();
+
+            List<Student> foundStudents = students_list.FindAll(s =>
+                s.FName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                s.LName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                s.Id.ToString() == searchTerm);
+
+            if (foundStudents.Count == 0)
+            {
+                Console.WriteLine("No students found matching your search term.");
+            }
+            else
+            {
+                Console.WriteLine("Found Students:");
+                foreach (var student in foundStudents)
+                {
+                    Console.WriteLine($"Name: {student.FName} {student.LName}, Student Id: {student.Id}, Dorm: {student.Dorm}, Block: {student.Block}, Room: {student.RoomNumber}");
+                    if (student.Equipment.Count > 0)
+                    {
+                        Console.WriteLine("  Assigned Equipment:");
+                        foreach (var eq in student.Equipment)
+                        {
+                            Console.WriteLine($"    - {eq.Type} (Id: {eq.EquipmentId}, Status: {eq.Status})");
+                        }
+                    }
+                }
+            }
+            Console.Write("\nPress Enter to return to Student Menu...");
+            Console.ReadKey();
+        }
                  
