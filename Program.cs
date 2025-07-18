@@ -159,3 +159,47 @@ namespace DormitoryManagement
                 }
             }
         }
+
+
+        static void StudentManagementMenu()
+        {
+            while(true)
+            {
+                Console.Clear();
+                Console.WriteLine("==== Student Management ====");
+                Console.WriteLine("1. Add New Student");
+                Console.WriteLine("2. Remove Student");
+                Console.WriteLine("3. Edit Student Information");
+                Console.WriteLine("4. Search Student");
+                Console.WriteLine("5. View Full Student Information");
+                Console.WriteLine("6. Register Student in Dorm");
+                Console.WriteLine("7. Move Student");
+                Console.WriteLine("0. Back to People Management Menu");
+
+                Console.Write("\nSelect an option: ");
+                string input = Console.Readline();
+
+                switch (input)
+                {
+                    case "1":
+                        AddStudent(); break;
+                    case "2":
+                        RemoveStudent(); break;
+                    case"3":
+                        EditStudent(); break;
+                    case "4":
+                        SearchStudent(); break;
+                    case "5":
+                        ViewFullStudentInformation(); break;
+                    case "6":
+                        RegisterStudentInDorm(); break;
+                    case "7":
+                        MoveStudent(); break;
+                    case "0": return;
+                    default:
+                        Console.WriteLine("Invalid input. Press Enter to try again.");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
