@@ -88,7 +88,7 @@ namespace DormitoryManagement
 
         static void DormManagerManagementMenu()
         {
-            while(true)
+            while (true)
             {
                 Console.Clear();
                 Console.WriteLine("==== Dorm Manager Management ====");
@@ -124,7 +124,7 @@ namespace DormitoryManagement
 
         static void BlockManagerManagementMenu()
         {
-            while(true)
+            while (true)
             {
                 Console.Clear();
                 Console.WriteLine("==== Block Manager Management ====");
@@ -149,7 +149,7 @@ namespace DormitoryManagement
                         ChangeBlockManager(); break;
                     case "4":
                         ViewBlockManagers(); break;
-                        case "0": return;
+                    case "0": return;
                     default:
                         Console.WriteLine("Invalid input. Press Enter to try again.");
                         Console.ReadKey();
@@ -163,7 +163,7 @@ namespace DormitoryManagement
 
         static void StudentManagementMenu()
         {
-            while(true)
+            while (true)
             {
                 Console.Clear();
                 Console.WriteLine("==== Student Management ====");
@@ -185,7 +185,7 @@ namespace DormitoryManagement
                         AddStudent(); break;
                     case "2":
                         RemoveStudent(); break;
-                    case"3":
+                    case "3":
                         EditStudent(); break;
                     case "4":
                         SearchStudent(); break;
@@ -202,4 +202,130 @@ namespace DormitoryManagement
                         break;
                 }
             }
+        }
+        static void AddDormManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Add New Dorm Manager ***");
+
+            Console.Write("First name: ");
+            string fName = Console.ReadLine();
+
+            Console.Write("Last Name: ");
+            string lName = Console.Readline();
+
+            Console.Write("National Code: ");
+            int nationalCode = int.Parse(Console.ReadLine());
+
+            Console.Write("Phone Number: ");
+            int phoneNumber = int.Parse(Console.Readline());
+
+            Console.Write("Address: ");
+            string address = Console.ReadLine();
+
+            Console.Write("Post (e.g., Head Manager, Assistant Manager): ");
+            string post = Console.ReadLine();
+
+            Console.Write("Dormitory Under Responsibility: ");
+            string dormResponsibility = Console.ReadLine();
+
+            dormManagers_list.Add(new DormManager(fName, lName, nationalCode, phoneNumber, address, post, dormResponsibility));
+            Console.WriteLine("Dorm Manager added successfully.");
+            Console.Write("\nPress Enter to return to Dorm Manager Menu...");
+            Console.ReadKey();
+        }
+
+        static void RemoveDormManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Remove Dorm Mnager ***");
+
+            Console.Write("Enter Nation Code of Dorm Manager to Remove: ");
+            if (int.tryParse(Console.ReaadLine, out int nationalCodeToRemove))
+            {
+                DormManager target = dormManagers_list.Find(dm => dm.NationalCode == nationalCodeToRemove);
+                if (target != null)
+                {
+                    dormManager_list.Remove(target);
+                    Console.WriteLine("Dorm Manager removed successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Dorm Manager not found !!!!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid National Code. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Dorm Manager Menu...");
+            Console.ReadKey();
+        }
+
+        static void EditDormManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Edit Dorm Manager Information ***");
+
+            Console.Write("Enter National Code of Dorm Manager to Edite: ");
+            if (int.TryParse(Console.ReadLine(), out int nationalCodeToEdite))
+            {
+                DormManager target = dormManagers_list.Find(dm => dm.NationalCode == nationalCodeToEdit);
+                if (target != null)
+                {
+                    Console.WriteLine($"Editing information for {target.FName} {target.LName}");
+
+                    Console.Write($"New Phone Number (current: {target.PhoneNumber}): ");
+                    
+                    if (int.TryParse(Console.ReadLine(),out int newPhoneNumber))
+                    {
+                        target.PhoneNumber = newPhoneNumber;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid input. Phone number not chaged.");
+                    }
+                    Console.Write($"New Address (current: {target.Address}):");
+                    Console.ReadLine();
+
+                    Console.Write($"New Post (current: {target.Post}): ");
+                    target.Post = Console.ReadLine();
+
+                    Console.Write($"New Dormitory Under Responsibility (current: {target.DormitoryUnderResponsibility}): ");
+                    target.DormitoryUnderResponsibility = Console.ReadLine();
+
+                    Console.WriteLine("Dorm Manager information updated successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Dorm Manager not found !!!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid National Code. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Dorm Manager Menu...");
+            Console.ReadKey();
+        }
+
+
+        static void ViewDormManagers()
+        {
+            Console.Clear();
+            Console.WriteLine("*** List of Dorm Manager ***");
+
+            if (dormManagers_list.Conunt == 0)
+            {
+                Console.WriteLine("No Dorm Manager found.");
+            }
+            else
+            {
+                foreach (var manager in dormManagers_list)
+                {
+                    Console.WriteLine($"Name: {manager.FName} {manager.LName}, National Code: {manager.NationalCode}, Post: {manager.Post}, Dorm: {manager.DormitoryUnderResponsibility}");
+                }
+            }
+            Console.Write("\nPress Enter to return to Dorm Manager Menu...");
+            Console.ReadKey();
         }
