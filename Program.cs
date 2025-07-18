@@ -19,7 +19,7 @@ namespace DormitoryManagement
     }
     public class Equipment
     {
-        public EquipName Type {  get; set; }
+        public EquipName Type { get; set; }
         public int EquipmentId { get; set; }
         public Status Status { get; set; }
         public int RoomNumber { get; set; }
@@ -276,8 +276,8 @@ namespace DormitoryManagement
                     Console.WriteLine($"Editing information for {target.FName} {target.LName}");
 
                     Console.Write($"New Phone Number (current: {target.PhoneNumber}): ");
-                    
-                    if (int.TryParse(Console.ReadLine(),out int newPhoneNumber))
+
+                    if (int.TryParse(Console.ReadLine(), out int newPhoneNumber))
                     {
                         target.PhoneNumber = newPhoneNumber;
                     }
@@ -402,3 +402,88 @@ namespace DormitoryManagement
             Console.Write("\nPress Enter to return to Block Manager Menu...");
             Console.ReadKey();
         }
+
+
+        static void GhangeBlockManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Ghange Block Manager ***");
+
+            if (blockManagers_lidt.Count == 0)
+            {
+                Console.WriteLine("No Block Manager to change.");
+                Console.Write("\nPress Enter to return to Block Manager Menu...");
+                Console.ReadKeey();
+                return;
+            }
+            Console.Write("Enter  National Code of the current Block Manager to change: ");
+            if (int.TryParse(Console.ReadLine(), out int currentNationalCode))
+            {
+                BlockManager currentManager = blockManagers_list.Find(bm => bm.NationalCode == currentNationalCode);
+                if (currentManager != null)
+                {
+                    Console.WriteLine($"Current Block Manager: {currentManager.FName} {currentManager.LName} for Block: {currentManager.BlockUnderResponsibility}");
+
+                    if (students_list.Count == 0)
+                    {
+                        Console.WriteLine("No students available to assign as new Block Manager.");
+                        Console.Write("\nPress Enter to return to Block Manager Menu...");
+                        Console.ReadKey();
+                        return;
+                    }
+
+                    Console.WriteLine("\nSelect a new student to become the Block Manager:");
+                    for (int i = 0; i < students_list.Count; i++)
+                    {
+                        if (!blockManagers_list.Exists(bm => bm.NationalCode == students_list[i].NationalCode))
+                        {
+                            Console.WriteLine($"{i + 1}. {students_list[i].FName} {students_list[i].LName} (Student ID: {students_list[i].Id})");
+                        }
+                    }
+                    Console.Write("Enter the number of the new student: ");
+                    if (int.TryParse(Console.ReadLine(), out int newStudentChoice) && newStudentChoice > 0 && newStudentChoice <= students_list.Count)
+                    {
+                        Student newStudent = students_list[newStudentChoice - 1];
+                        blockManagers_list.Remove(currentManager);
+                        blockManagers_list.Add(new BlockManager(newStudent.FName, newStudent.LName, newStudent.NationalCode, newStudent.PhoneNumber, newStudent.Address, "Block Manager", currentManager.BlockUnderResponsibility));
+
+                        Console.WriteLine($"Block Manager changed successfully from {currentManager.FName} {currentManager.LName} to {newStudent.FName} {newStudent.LName} for Block: {currentManager.BlockUnderResponsibility}.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid student selection.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("!! Current Block Manager not found !!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid National Code. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Block Manager Menu...");
+            Console.ReadKey();
+        }
+
+        static void ViewBlockManagers()
+        {
+            Console.Clear();
+            Console.WriteLine("*** List of Block Managers ***");
+
+            if (blockManagers_list.Count == 0)
+            {
+                Console.WriteLine("No Block Managers found.");
+            }
+            else
+            {
+                foreach (var manager in blockManagers_list)
+                {
+                    Console.WriteLine($"Name: {manager.FName} {manager.LName}, National Code: {manager.NationalCode}, Post: {manager.Post}, Block: {manager.BlockUnderResponsibility}");
+                }
+            }
+            Console.Write("\nPress Enter to return to Block Manager Menu...");
+            Console.ReadKey();
+        }
+                 
