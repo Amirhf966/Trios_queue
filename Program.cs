@@ -329,3 +329,76 @@ namespace DormitoryManagement
             Console.Write("\nPress Enter to return to Dorm Manager Menu...");
             Console.ReadKey();
         }
+
+
+
+        static void AddBlockManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Add New Block Manager ***");
+            if (student_list.Conunt == 0)
+            {
+                Console.WriteLine("No students available to assign as Block Manager. Please add students first.");
+                Console.Write("\nPress Enter to return to Block Manager Menu...");
+                Console.ReadKey();
+                return;
+            }
+            Console.WriteLine("Select a student to become a Block Manager:");
+            for (int i = 0; i < student_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {students_list[i].FName} {students_list[i].LName} (Student ID: {students_list[i].Id})");
+            }
+
+            Console.Write("Enter the number of the student: ");
+            if (int.TryParse(Console.ReadLine(), out int studentChoice) && studentChoice > 0 && studentChoice <= students_list.Count)
+            {
+                Student selectedStudent = student_list[studentChoice - 1];
+                if (blockManagers_list.Exists(bm => bm.NationalCode == selectedStudent.NationalCode))
+                {
+                    Console.WriteLine($"{selectedStudent.FName} {selectedStudent.LName} is already a Block Manager.");
+                    Console.Write("\nPress Enter to return to Block Manager Menu...");
+                    Console.ReadKey();
+                    return;
+                }
+
+                Console.Write("Block Under Responsibility: ");
+                string blockResponsibility = Console.ReadLine();
+
+                blockManagers_list.Add(new BlockManager(selectedStudent.FName, selectedStudent.LName, selectedStudent.NationalCode, selectedStudent.PhoneNumber, selectedStudent.Address, post, blockResponsibility));
+                Console.WriteLine("Block Manager added successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid student selection.");
+            }
+            Console.Write("\nPress Enter to return to Block Manager Menu...");
+            Console.ReadKey();
+        }
+
+
+        static void RemoveBlockManager()
+        {
+            Console.Clear();
+            Console.WriteLine("*** Remove Block Manager ***");
+
+            Console.Write("Enter National Code of Block Manager to Remove:");
+            if (int.TryParse(Console.ReadLine(), out int nationalCodeToRemove))
+            {
+                BlockManager target = blockManagers_list.Find(bm => bm.NationalCode == nationalCodeToRemove);
+                if (target != null)
+                {
+                    blockManager_list.Remove(target);
+                    Console.WriteLine("Block Manager removed successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Block Manager not found !!!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid National Code. Please enter a number.");
+            }
+            Console.Write("\nPress Enter to return to Block Manager Menu...");
+            Console.ReadKey();
+        }
