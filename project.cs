@@ -226,11 +226,11 @@ namespace DormitoryManagement
                 switch (choice)
                 {
                     case "1":
-
+                        DormitoryMenu();
                         break;
 
                     case "2":
-
+                        ChooseDorm();
                         break;
                     case "3":
                         // TODO: Equipment Management Page
@@ -259,5 +259,148 @@ namespace DormitoryManagement
                 Console.ReadKey();
             }
         }
-    }
-}
+
+        //********************************************************
+        // Start of case 1 : Dorm Management
+        // DormitoryMenu
+
+        static void DormitoryMenu()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("==== Dormitory Management ====");
+                Console.WriteLine("1. Add New Dormitory");
+                Console.WriteLine("2. Remove Dormitory");
+                Console.WriteLine("3. Edit Dormitory");
+                Console.WriteLine("4. View All Dormitories");
+                Console.WriteLine("0. Back to Main Menu");
+
+                Console.Write("\nSelect an option: ");
+                string input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        AddDormitory();
+                        break;
+                    case "2":
+                        RemoveDormitory();
+                        break;
+                    case "3":
+                        EditDormitory();
+                        break;
+                    case "4":
+                        ViewDormitories();
+                        break;
+                    case "0":
+                        return;
+                    default:
+                        Console.WriteLine("Invalid input. Press Enter to try again.");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+        // 1. Add Dormitory
+        static void AddDormitory()
+        {
+            Console.Clear();
+            Console.WriteLine("--- Add New Dormitory ---");
+
+            Console.Write("Dormitory Name: ");
+            string name = Console.ReadLine();
+
+            Console.Write("Address: ");
+            string address = Console.ReadLine();
+
+            Console.Write("Capacity: ");
+            int capacity = int.Parse(Console.ReadLine());
+
+            Console.Write("Manager Name: ");
+            string manager = Console.ReadLine();
+
+            dormitories_list.Add(new Dormitory(name, address, capacity, manager));
+            Console.WriteLine("Dormitory added successfully.");
+            Console.Write("\nPress Enter to return to Dormitory Menu...");
+            Console.ReadKey();
+        }
+
+        // 2. Remove Dormitory
+        static void RemoveDormitory()
+        {
+            Console.Clear();
+            Console.WriteLine("--- Remove Dormitory ---");
+
+            Console.Write("Enter Dormitory Name to Remove: ");
+            string name = Console.ReadLine();
+
+            Dormitory target = dormitories_list.Find(d => d.Name == name);
+            if (target != null)
+            {
+                dormitories_list.Remove(target);
+                Console.WriteLine("Dormitory removed.");
+            }
+            else
+            {
+                Console.WriteLine("!! Dormitory not found !!");
+            }
+            Console.Write("\nPress Enter to return to Dormitory Menu...");
+            Console.ReadKey();
+        }
+
+        // 3. Edit Dormitory
+
+        static void EditDormitory()
+        {
+            Console.Clear();
+            Console.WriteLine("--- Edit Dormitory ---");
+
+            Console.Write("Enter Dormitory Name to Edit: ");
+            string name = Console.ReadLine();
+
+            Dormitory dorm = dormitories_list.Find(d => d.Name == name);
+            if (dorm != null)
+            {
+                Console.Write("New Address: ");
+                dorm.Address = Console.ReadLine();
+
+                Console.Write("New Capacity: ");
+                dorm.Capacity = int.Parse(Console.ReadLine());
+
+                Console.Write("New Manager: ");
+                dorm.Manager = Console.ReadLine();
+
+                Console.WriteLine("Dormitory updated.");
+            }
+            else
+            {
+                Console.WriteLine("!! Dormitory not found !!");
+            }
+            Console.Write("\nPress Enter to return to Dormitory Menu...");
+            Console.ReadKey();
+        }
+
+        // 4. View Dormitories
+
+        static void ViewDormitories()
+        {
+            Console.Clear();
+            Console.WriteLine("--- List of Dormitories ---");
+
+            if (dormitories_list.Count == 0)
+            {
+                Console.WriteLine("No dormitories found.");
+            }
+            else
+            {
+                foreach (var dorm in dormitories_list)
+                {
+                    Console.WriteLine(dorm.ToString());
+                }
+            }
+            Console.Write("\nPress Enter to return to Dormitory Menu...");
+            Console.ReadKey();
+        }
+
+        // End of case 1 : Dorm Management
