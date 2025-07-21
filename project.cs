@@ -402,5 +402,7 @@ namespace DormitoryManagement
             Console.Write("\nPress Enter to return to Dormitory Menu...");
             Console.ReadKey();
         }
+    }
+}
 
         // End of case 1 : Dorm Management
