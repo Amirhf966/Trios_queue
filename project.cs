@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Xml.Linq;
 
 namespace DormitoryManagement
 {
@@ -63,7 +65,7 @@ namespace DormitoryManagement
         public string DormitoryUnderResponsibility { get; set; }
 
         public DormManager(string fName, string lName, int nationalCode, int phoneNumber, string address,
-            string post, string dormitoryUnderResponsibility)
+            string post ,string dormitoryUnderResponsibility )
             : base(fName, lName, nationalCode, phoneNumber, address)
         {
             Post = post;
@@ -75,6 +77,8 @@ namespace DormitoryManagement
     {
         public string Post { get; set; }
         public string BlockUnderResponsibility { get; set; }
+
+        public List<Room> Rooms { get; set; } = new List<Room>();
 
         public BlockManager(string fName, string lName, int nationalCode, int phoneNumber, string address,
             string post, string blockUnderResponsibility)
@@ -157,12 +161,14 @@ namespace DormitoryManagement
         public int RoomCount { get; set; }
         public string BlockManagerName { get; set; } // This "BlockManagerName" is just a string name, not a BlockManager object.
 
+        public List<Room> Rooms { get; set; }
         public Block(string name, int floorCount, int roomCount, string manager)
         {
             BlockName = name;
             FloorCount = floorCount;
             RoomCount = roomCount;
             BlockManagerName = manager;
+            Rooms = new List<Room>();
         }
 
         public override string ToString()
@@ -170,6 +176,8 @@ namespace DormitoryManagement
             return $"Block: {BlockName}, Floors: {FloorCount}, Rooms: {RoomCount}, Manager: {BlockManagerName}";
         }
     }
+
+    
 
 
     //---------------------------------------------------------------------------------------------
@@ -185,10 +193,12 @@ namespace DormitoryManagement
         static List<Student> students_list = new List<Student>();
         static List<Equipment> allEquipment_list = new List<Equipment>();
         static List<string> repairRequests = new List<string>();
+        public static List<Block> blocks_list = new List<Block>();
+
         static void Main(string[] args)
         {
             ShowLogin();
-            ShowMainMenu();
+            //ShowMainMenu();
         }
 
         static void ShowLogin()
@@ -205,6 +215,7 @@ namespace DormitoryManagement
                     Console.WriteLine("\nAccess granted! Press Enter to continue...");
                     Console.ReadKey();
                     Console.Clear();
+                    ShowMainMenu();
                     break;
                 }
                 else
@@ -219,6 +230,7 @@ namespace DormitoryManagement
         {
             while (true)
             {
+                Console.Title = "Dormitory Management Proram";
                 Console.Clear();
                 Console.WriteLine("==== Main Menu ====");
                 Console.WriteLine("1. Dorm Management");
@@ -247,8 +259,7 @@ namespace DormitoryManagement
                         PropertyManagementMenu();
                         break;
                     case "5":
-                        // TODO: Reports Page
-                        Console.WriteLine("\n[Reports - Not Implemented Yet]");
+                        ReportsMenu();
                         break;
                     case "6":
                         ShowLogin();
@@ -312,32 +323,30 @@ namespace DormitoryManagement
         static void AddDormitory()
         {
             Console.Clear();
-            Console.WriteLine("--- Add New Dormitory ---");
+            Console.WriteLine("--- Add Dormitory ---");
 
             Console.Write("Dormitory Name: ");
             string name = Console.ReadLine();
 
-            Console.Write("Address: ");
+            Console.Write("Dormitory Address: ");
             string address = Console.ReadLine();
 
-            Console.Write("Capacity: ");
-
+            Console.Write("Dormitory Capacity: ");
             if (!int.TryParse(Console.ReadLine(), out int capacity))
             {
                 Console.WriteLine("Invalid capacity. Please enter a number.");
-                Console.Write("\nPress Enter to return to Dormitory Menu...");
                 Console.ReadKey();
                 return;
             }
 
-            Console.Write("Manager Name: ");
-            string manager = Console.ReadLine();
+            Dormitory newDorm = new Dormitory(name, address, capacity, null); 
+            dormitories_list.Add(newDorm);
 
-            dormitories_list.Add(new Dormitory(name, address, capacity, manager));
-            Console.WriteLine("Dormitory added successfully.");
+            Console.WriteLine("Dormitory added successfully (no manager assigned yet).");
             Console.Write("\nPress Enter to return to Dormitory Menu...");
             Console.ReadKey();
         }
+
 
         // 2. Remove Dormitory
         static void RemoveDormitory()
@@ -345,21 +354,36 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("--- Remove Dormitory ---");
 
-            Console.Write("Enter Dormitory Name to Remove: ");
-            string name = Console.ReadLine();
-            Dormitory target = dormitories_list.Find(d => d.Name == name);
-            if (target != null)
+            if (dormitories_list.Count == 0)
             {
-                dormitories_list.Remove(target);
-                Console.WriteLine("Dormitory removed.");
+                Console.WriteLine("No dormitories available.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("Select a dormitory to remove:");
+            for (int i = 0; i < dormitories_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {dormitories_list[i].Name}");
+            }
+
+            Console.Write("\nEnter number of dormitory to remove: ");
+            if (int.TryParse(Console.ReadLine(), out int index) &&
+                index >= 1 && index <= dormitories_list.Count)
+            {
+                var removedDorm = dormitories_list[index - 1];
+                dormitories_list.RemoveAt(index - 1);
+                Console.WriteLine($"Dormitory '{removedDorm.Name}' removed successfully.");
             }
             else
             {
-                Console.WriteLine("!! Dormitory not found !!");
+                Console.WriteLine("Invalid selection.");
             }
+
             Console.Write("\nPress Enter to return to Dormitory Menu...");
             Console.ReadKey();
         }
+
 
         // 3. Edit Dormitory
 
@@ -368,16 +392,29 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("--- Edit Dormitory ---");
 
-            Console.Write("Enter Dormitory Name to Edit: ");
-            string name = Console.ReadLine();
-            Dormitory dorm = dormitories_list.Find(d => d.Name == name);
-            if (dorm != null)
+            if (dormitories_list.Count == 0)
             {
+                Console.WriteLine("No dormitories available.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("Select a dormitory to edit:");
+            for (int i = 0; i < dormitories_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {dormitories_list[i].Name}");
+            }
+
+            Console.Write("\nEnter number of dormitory to edit: ");
+            if (int.TryParse(Console.ReadLine(), out int index) &&
+                index >= 1 && index <= dormitories_list.Count)
+            {
+                Dormitory dorm = dormitories_list[index - 1];
+
                 Console.Write($"New Address (current: {dorm.Address}): ");
                 dorm.Address = Console.ReadLine();
 
                 Console.Write($"New Capacity (current: {dorm.Capacity}): ");
-
                 if (!int.TryParse(Console.ReadLine(), out int newCapacity))
                 {
                     Console.WriteLine("Invalid capacity. Capacity not updated.");
@@ -394,11 +431,13 @@ namespace DormitoryManagement
             }
             else
             {
-                Console.WriteLine("!! Dormitory not found !!");
+                Console.WriteLine("Invalid selection.");
             }
+
             Console.Write("\nPress Enter to return to Dormitory Menu...");
             Console.ReadKey();
         }
+
 
         // 4. View Dormitories
 
@@ -415,14 +454,31 @@ namespace DormitoryManagement
             {
                 foreach (var dorm in dormitories_list)
                 {
-                    Console.WriteLine(dorm.ToString());
+                    string managerDisplay = string.IsNullOrWhiteSpace(dorm.Manager) ? "None" : dorm.Manager;
+                    Console.WriteLine($"Name: {dorm.Name}, Address: {dorm.Address}, Capacity: {dorm.Capacity}, Manager: {managerDisplay}");
                 }
             }
+
             Console.Write("\nPress Enter to return to Dormitory Menu...");
             Console.ReadKey();
         }
 
+
         // End of case 1 : Dorm Management
+        //****************************************************
+
+        static int GetValidatedIntegerInput(string prompt, string errorMessage)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int value))
+                    return value;
+                Console.WriteLine(errorMessage);
+            }
+        }
+
 
         //****************************************************
         // Start of case 2 : Block Management
@@ -468,6 +524,7 @@ namespace DormitoryManagement
                 Console.WriteLine("2. Remove Block");
                 Console.WriteLine("3. Edit Block");
                 Console.WriteLine("4. View All Blocks");
+                Console.WriteLine("5. Room Management");
                 Console.WriteLine("0. Back");
 
                 Console.Write("\nSelect an option: ");
@@ -485,6 +542,9 @@ namespace DormitoryManagement
                         break;
                     case "4":
                         ViewBlocks(dormName);
+                        break;
+                    case "5":
+                        RoomManagementMenu();
                         break;
                     case "0":
                         return;
@@ -505,7 +565,6 @@ namespace DormitoryManagement
             string blockName = Console.ReadLine();
 
             Console.Write("Number of Floors: ");
-
             if (!int.TryParse(Console.ReadLine(), out int floorCount))
             {
                 Console.WriteLine("Invalid number of floors. Please enter a number.");
@@ -515,7 +574,6 @@ namespace DormitoryManagement
             }
 
             Console.Write("Number of Rooms: ");
-
             if (!int.TryParse(Console.ReadLine(), out int roomCount))
             {
                 Console.WriteLine("Invalid number of rooms. Please enter a number.");
@@ -524,21 +582,22 @@ namespace DormitoryManagement
                 return;
             }
 
-            Console.Write("Block Manager Name: ");
-            string manager = Console.ReadLine();
-            Block newBlock = new Block(blockName, floorCount, roomCount, manager);
+            Block newBlock = new Block(blockName, floorCount, roomCount, null);
 
             if (!dormBlocks.ContainsKey(dormName))
             {
                 dormBlocks[dormName] = new List<Block>();
             }
-
             dormBlocks[dormName].Add(newBlock);
 
-            Console.WriteLine("Block added successfully.");
+            blocks_list.Add(newBlock);
+
+            Console.WriteLine("Block added successfully (no manager assigned yet).");
             Console.Write("\nPress Enter to continue...");
             Console.ReadKey();
         }
+
+
         // 2. View Block
         static void ViewBlocks(string dormName)
         {
@@ -549,7 +608,10 @@ namespace DormitoryManagement
             {
                 foreach (var block in dormBlocks[dormName])
                 {
-                    Console.WriteLine(block.ToString());
+                    string managerDisplay = string.IsNullOrWhiteSpace(block.BlockManagerName) ? "None" : block.BlockManagerName;
+
+
+                    Console.WriteLine($"Block Name: {block.BlockName}, Floors: {block.FloorCount}, Rooms: {block.RoomCount}, Manager: {managerDisplay}");
                 }
             }
             else
@@ -560,6 +622,7 @@ namespace DormitoryManagement
             Console.Write("\nPress Enter to continue...");
             Console.ReadKey();
         }
+
 
         // 3. Remove Block
         static void RemoveBlock(string dormName)
@@ -671,6 +734,154 @@ namespace DormitoryManagement
             Console.ReadKey();
         }
 
+        // 5. Room Managment
+
+        public static void RoomManagementMenu()
+        {
+            Console.Clear();
+            if (blocks_list.Count == 0)
+            {
+                Console.WriteLine("No blocks available. Add blocks first.");
+                Console.ReadKey(); return;
+            }
+
+            Console.WriteLine("*** Select Block for Room Management ***");
+            for (int i = 0; i < blocks_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. Block {blocks_list[i].BlockName}");
+            }
+
+            Console.Write("Enter number: ");
+            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= blocks_list.Count)
+            {
+                Block selectedBlock = blocks_list[index - 1];
+                ManageRoomsInBlock(selectedBlock);
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection.");
+                Console.ReadKey();
+            }
+        }
+
+
+        public static void ManageRoomsInBlock(Block block)
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine($"=== Room Management for Block {block.BlockName} ===");
+                Console.WriteLine("1. Add Room");
+                Console.WriteLine("2. Remove Room");
+                Console.WriteLine("3. Edit Room");
+                Console.WriteLine("4. View Rooms");
+                Console.WriteLine("0. Back");
+
+                Console.Write("Select an option: ");
+                string input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1": AddRoomToBlock(block); break;
+                    case "2": RemoveRoomFromBlock(block); break;
+                    case "3": EditRoomInBlock(block); break;
+                    case "4": ViewRoomsInBlock(block); break;
+                    case "0": return;
+                    default: Console.WriteLine("Invalid input."); Console.ReadKey(); break;
+                }
+            }
+        }
+
+
+        public static void AddRoomToBlock(Block block)
+        {
+            Console.Clear();
+            Console.WriteLine($"Add Room to Block {block.BlockName}");
+
+            //Console.Write("Enter Room Number: ");
+            int roomNumber = GetValidatedIntegerInput("Enter Room Number: ", "Invalid Room Number. Please enter a number.");
+
+            Console.Write("Enter Floor: ");
+            int floor = GetValidatedIntegerInput("Enter floor: ", "Invalid floor. Please enter a number.");
+
+
+            Console.Write("Enter Capacity: ");
+            int capacity = GetValidatedIntegerInput("Enter Capacity: ", "Invalid Capacity. Please enter a number.");
+
+            block.Rooms.Add(new Room(roomNumber, floor, capacity, new List<Equipment>(), new List<Student>()));
+            Console.WriteLine("Room added.");
+            Console.ReadKey();
+        }
+
+        public static void RemoveRoomFromBlock(Block block)
+        {
+            Console.Clear();
+            Console.WriteLine($"Remove Room from Block {block.BlockName}");
+
+            Console.Write("Enter Room Number: ");
+            int roomNumber = int.Parse(Console.ReadLine());
+
+            var room = block.Rooms.Find(r => r.RoomNumber == roomNumber);
+            if (room != null)
+            {
+                block.Rooms.Remove(room);
+                Console.WriteLine("Room removed.");
+            }
+            else Console.WriteLine("Room not found.");
+
+            Console.ReadKey();
+        }
+
+        public static void EditRoomInBlock(Block block)
+        {
+            Console.Clear();
+            Console.WriteLine($"Edit Room in Block {block.BlockName}");
+
+            Console.Write("Enter Room Number: ");
+            int roomNumber = int.Parse(Console.ReadLine());
+
+            var room = block.Rooms.Find(r => r.RoomNumber == roomNumber);
+            if (room != null)
+            {
+                Console.Write($"New Floor (current: {room.Floor}): ");
+                room.Floor = int.Parse(Console.ReadLine());
+
+                Console.Write($"New Capacity (current: {room.Capacity}): ");
+                room.Capacity = int.Parse(Console.ReadLine());
+
+                Console.WriteLine("Room updated.");
+            }
+            else Console.WriteLine("Room not found.");
+
+            Console.ReadKey();
+        }
+
+        public static void ViewRoomsInBlock(Block block)
+        {
+            Console.Clear();
+            Console.WriteLine($"Rooms in Block {block.BlockName}");
+
+            if (block.Rooms.Count == 0)
+            {
+                Console.WriteLine("No rooms.");
+            }
+            else
+            {
+                foreach (var room in block.Rooms)
+                {
+                    Console.WriteLine($"Room {room.RoomNumber} | Floor: {room.Floor} | Capacity: {room.Capacity}");
+                }
+            }
+
+            Console.ReadKey();
+        }
+
+
+
+
+
+       
+
         // End of Case 2 (Block Managment)
 
         // start of case 3 (people managment)
@@ -760,8 +971,8 @@ namespace DormitoryManagement
 
             Console.Write("Last Name: ");
             string lName = Console.ReadLine();
-            Console.Write("National Code: ");
 
+            Console.Write("National Code: ");
             if (!int.TryParse(Console.ReadLine(), out int nationalCode))
             {
                 Console.WriteLine("Invalid National Code. Please enter a number.");
@@ -771,7 +982,6 @@ namespace DormitoryManagement
             }
 
             Console.Write("Phone Number: ");
-
             if (!int.TryParse(Console.ReadLine(), out int phoneNumber))
             {
                 Console.WriteLine("Invalid Phone Number. Please enter a number.");
@@ -782,16 +992,46 @@ namespace DormitoryManagement
 
             Console.Write("Address: ");
             string address = Console.ReadLine();
+
             Console.Write("Post (e.g., Head Manager, Assistant Manager): ");
             string post = Console.ReadLine();
 
-            Console.Write("Dormitory Under Responsibility: ");
-            string dormResponsibility = Console.ReadLine();
-            dormManagers_list.Add(new DormManager(fName, lName, nationalCode, phoneNumber, address, post, dormResponsibility));
-            Console.WriteLine("Dorm Manager added successfully.");
+            if (dormitories_list.Count == 0)
+            {
+                Console.WriteLine("No dormitory defined! Please add a dormitory first.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("\nAvailable dormitories:");
+            for (int i = 0; i < dormitories_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {dormitories_list[i].Name}");
+            }
+
+            Console.Write("Which dormitory would you like the person to be assigned as manager of?\nSelect the desired dormitory number: ");
+            if (int.TryParse(Console.ReadLine(), out int dormIndex) && dormIndex > 0 && dormIndex <= dormitories_list.Count)
+            {
+                Dormitory selectedDorm = dormitories_list[dormIndex - 1];
+                string dormResponsibility = selectedDorm.Name;
+
+                DormManager newManager = new DormManager(fName, lName, nationalCode, phoneNumber, address, post, dormResponsibility);
+                dormManagers_list.Add(newManager);
+
+                selectedDorm.Manager = $"{fName} {lName}";
+
+                Console.WriteLine("Dorm Manager added and assigned successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection. Operation cancelled.");
+            }
+
             Console.Write("\nPress Enter to return to Dorm Manager Menu...");
             Console.ReadKey();
         }
+
+
 
         // 3=>1=>2
         static void RemoveDormManager()
@@ -929,7 +1169,6 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("*** Add New Block Manager ***");
 
-
             if (students_list.Count == 0)
             {
                 Console.WriteLine("No students available. Add students first.");
@@ -943,28 +1182,55 @@ namespace DormitoryManagement
             }
 
             Console.Write("Enter student number: ");
-
-            if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice <= students_list.Count)
+            if (!int.TryParse(Console.ReadLine(), out int choice) || choice < 1 || choice > students_list.Count)
             {
-                Student selected = students_list[choice - 1];
-
-                if (blockManagers_list.Exists(bm => bm.NationalCode == selected.NationalCode))
-                {
-                    Console.WriteLine("Student is already a Block Manager.");
-                }
-                else
-                {
-                    Console.Write("Enter Block Under Responsibility: ");
-                    string block = Console.ReadLine();
-
-
-                    blockManagers_list.Add(new BlockManager(selected.FName, selected.LName, selected.NationalCode, selected.PhoneNumber, selected.Address, "Block Manager", block));
-                    Console.WriteLine("Block Manager added.");
-                }
+                Console.WriteLine("Invalid input.");
+                Console.ReadKey();
+                return;
             }
-            else Console.WriteLine("Invalid input.");
+
+            Student selected = students_list[choice - 1];
+
+            if (blockManagers_list.Exists(bm => bm.NationalCode == selected.NationalCode))
+            {
+                Console.WriteLine("Student is already a Block Manager.");
+                Console.ReadKey();
+                return;
+            }
+
+          
+            if (blocks_list.Count == 0)
+            {
+                Console.WriteLine("No blocks available. Add blocks first.");
+                Console.ReadKey(); return;
+            }
+
+            Console.WriteLine("Select a block to assign:");
+            for (int i = 0; i < blocks_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {blocks_list[i].BlockName}");
+            }
+
+            Console.Write("Enter block number: ");
+            if (!int.TryParse(Console.ReadLine(), out int blockChoice) || blockChoice < 1 || blockChoice > blocks_list.Count)
+            {
+                Console.WriteLine("Invalid block selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            Block selectedBlock = blocks_list[blockChoice - 1];
+
+            blockManagers_list.Add(new BlockManager(selected.FName, selected.LName, selected.NationalCode, selected.PhoneNumber, selected.Address, "Block Manager", selectedBlock.BlockName));
+
+
+            selectedBlock.BlockManagerName = $"{selected.FName} {selected.LName}";
+
+
+            Console.WriteLine("Block Manager added and assigned successfully.");
             Console.ReadKey();
         }
+
 
         // 3=>2=>2
         public static void RemoveBlockManager()
@@ -1146,21 +1412,35 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("*** Remove Student ***");
 
-            Console.Write("Enter Student ID to remove: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
+            if (students_list.Count == 0)
             {
-                var target = students_list.Find(s => s.Id == id);
-                if (target != null)
-                {
-                    students_list.Remove(target);
-                    Console.WriteLine("Student removed.");
-                }
-                else Console.WriteLine("Student not found.");
+                Console.WriteLine("No students found.");
+                Console.ReadKey();
+                return;
             }
-            else Console.WriteLine("Invalid input. Please enter a number.");
+
+            Console.WriteLine("Select a student to remove:");
+            for (int i = 0; i < students_list.Count; i++)
+            {
+                var s = students_list[i];
+                Console.WriteLine($"{i + 1}. {s.FName} {s.LName} - ID: {s.Id}");
+            }
+
+            Console.Write("\nEnter the number of the student to remove: ");
+            if (int.TryParse(Console.ReadLine(), out int choice) && choice >= 1 && choice <= students_list.Count)
+            {
+                var selectedStudent = students_list[choice - 1];
+                students_list.Remove(selectedStudent);
+                Console.WriteLine("Student removed successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection.");
+            }
 
             Console.ReadKey();
         }
+
 
         // 3=>3=>3
         public static void EditStudent()
@@ -1254,41 +1534,113 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("*** Register Student in Dorm ***");
 
-            Console.Write("Enter Student ID: ");
-            if (int.TryParse(Console.ReadLine(), out int id))
+            if (students_list.Count == 0)
             {
-                var student = students_list.Find(s => s.Id == id);
-                if (student != null)
-                {
-                    Console.Write($"Enter Dorm Name (current: {student.Dorm}): ");
-                    student.Dorm = Console.ReadLine();
-
-                    Console.Write($"Enter Block Number (current: {student.Block}): ");
-                    if (!int.TryParse(Console.ReadLine(), out int newBlock))
-                    {
-                        Console.WriteLine("Invalid Block Number. Block not updated.");
-                        Console.ReadKey();
-                        return;
-                    }
-                    student.Block = newBlock;
-
-                    Console.Write($"Enter Room Number (current: {student.RoomNumber}): ");
-                    if (!int.TryParse(Console.ReadLine(), out int newRoomNumber))
-                    {
-                        Console.WriteLine("Invalid Room Number. Room not updated.");
-                        Console.ReadKey();
-                        return;
-                    }
-                    student.RoomNumber = newRoomNumber;
-
-                    Console.WriteLine("Student registered in dorm.");
-                }
-                else Console.WriteLine("Student not found.");
+                Console.WriteLine("No students found.");
+                Console.ReadKey();
+                return;
             }
-            else Console.WriteLine("Invalid ID. Please enter a number.");
 
+            Console.WriteLine("Select a student to register:");
+            for (int i = 0; i < students_list.Count; i++)
+            {
+                var s = students_list[i];
+                Console.WriteLine($"{i + 1}. {s.FName} {s.LName} - ID: {s.Id}");
+            }
+
+            Console.Write("\nEnter the number of the student: ");
+            if (!int.TryParse(Console.ReadLine(), out int studentChoice) || studentChoice < 1 || studentChoice > students_list.Count)
+            {
+                Console.WriteLine("Invalid selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            var selectedStudent = students_list[studentChoice - 1];
+
+            if (dormitories_list.Count == 0)
+            {
+                Console.WriteLine("No dormitories found. Please add a dormitory first.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("\nAvailable Dormitories:");
+            for (int i = 0; i < dormitories_list.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {dormitories_list[i].Name}");
+            }
+
+            Console.Write("\nSelect the dormitory number: ");
+            if (!int.TryParse(Console.ReadLine(), out int dormChoice) || dormChoice < 1 || dormChoice > dormitories_list.Count)
+            {
+                Console.WriteLine("Invalid dormitory selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            string selectedDorm = dormitories_list[dormChoice - 1].Name;
+
+            if (!dormBlocks.ContainsKey(selectedDorm) || dormBlocks[selectedDorm].Count == 0)
+            {
+                Console.WriteLine("No blocks found for this dormitory.");
+                Console.ReadKey();
+                return;
+            }
+
+            var blocks = dormBlocks[selectedDorm];
+
+            Console.WriteLine("\nAvailable Blocks:");
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {blocks[i].BlockName}");
+            }
+
+            Console.Write("Select the block number: ");
+            if (!int.TryParse(Console.ReadLine(), out int blockChoice) || blockChoice < 1 || blockChoice > blocks.Count)
+            {
+                Console.WriteLine("Invalid block selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            var selectedBlock = blocks[blockChoice - 1];
+
+            if (selectedBlock.Rooms == null || selectedBlock.Rooms.Count == 0)
+            {
+                Console.WriteLine("No rooms found in this block.");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine("\nAvailable Rooms:");
+            for (int i = 0; i < selectedBlock.Rooms.Count; i++)
+            {
+                var room = selectedBlock.Rooms[i];
+                Console.WriteLine($"{i + 1}. Room {room.RoomNumber} - Floor: {room.Floor}, Capacity: {room.Capacity}");
+            }
+
+            Console.Write("Select the room number: ");
+            if (!int.TryParse(Console.ReadLine(), out int roomChoice) || roomChoice < 1 || roomChoice > selectedBlock.Rooms.Count)
+            {
+                Console.WriteLine("Invalid room selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            var selectedRoom = selectedBlock.Rooms[roomChoice - 1];
+
+            selectedStudent.Dorm = selectedDorm;
+            selectedStudent.Block = blockChoice;
+            selectedStudent.RoomNumber = selectedRoom.RoomNumber;
+
+            selectedRoom.Students.Add(selectedStudent);
+
+            Console.WriteLine("Student registered in dorm successfully.");
             Console.ReadKey();
         }
+
+
 
         // 3=>3=>7
         public static void MoveStudent()
@@ -1342,11 +1694,11 @@ namespace DormitoryManagement
             {
                 Console.Clear();
                 Console.WriteLine("==== Property Management ====");
-                Console.WriteLine("1. Register New Equipment"); // ثبت اموال جدید [cite: 222]
-                Console.WriteLine("2. Assign Equipment to Room"); // تخصیص اموال به اتاق ها 
-                Console.WriteLine("3. Assign Personal Equipment to Student"); // تخصیص اموال به دانشجویان [cite: 228]
-                Console.WriteLine("4. Manage Equipment Movement"); // مدیریت جابجایی اموال 
-                Console.WriteLine("5. Manage Repairs"); // مدیریت تعمیرات 
+                Console.WriteLine("1. Register New Equipment"); 
+                Console.WriteLine("2. Assign Equipment to Room"); 
+                Console.WriteLine("3. Assign Personal Equipment to Student"); 
+                Console.WriteLine("4. Manage Equipment Movement"); 
+                Console.WriteLine("5. Manage Repairs"); 
                 Console.WriteLine("0. Back to Main Menu");
 
                 Console.Write("\nSelect an option: ");
@@ -1411,10 +1763,11 @@ namespace DormitoryManagement
 
 
         // Helper to generate 8-digit equipment ID
+
         static string GenerateEquipmentId(int partNumber)
         {
             // Simple generation, could be more complex (e.g., using a counter per part number)
-            // For demonstration, let's just use current timestamp + part number
+            //For demonstration, let's just use current timestamp + part number
             Random rand = new Random();
             string timestamp = DateTime.Now.Ticks.ToString();
             // Take last 5 digits of timestamp for uniqueness, append part number and then pad to 8 digits
@@ -1422,58 +1775,107 @@ namespace DormitoryManagement
             return $"{partNumber.ToString().PadLeft(3, '0')}{idSuffix}".PadRight(8, '0').Substring(0, 8); // Ensure 8 digits
         }
 
+        //static string GenerateEquipmentId(int partNumber)
+        //{
+        //    Random rand = new Random();
+        //    int randomNumber = rand.Next(0, 99999); 
+
+        //    string part = partNumber.ToString().PadLeft(3, '0');      
+        //    string random = randomNumber.ToString().PadLeft(5, '0');  
+
+        //    return part + random; 
+        //}
+
 
         // 4 => 2: Assign Equipment to Room 
         static void AssignEquipmentToRoom()
         {
             Console.Clear();
-            Console.WriteLine("--- Assign Equipment to Room ---");
+            Console.WriteLine("*** Assign Equipment to Room ***");
 
-            if (allEquipment_list.Count == 0)
+            
+            List<Equipment> unassignedEquipments = allEquipment_list
+                .Where(e => !e.RoomNumber.HasValue && !e.AssignedStudentNationalCode.HasValue)
+                .ToList();
+
+            if (unassignedEquipments.Count == 0)
             {
-                Console.WriteLine("No equipment registered yet.");
+                Console.WriteLine("No unassigned equipment available. Please register equipment first.");
                 Console.ReadKey();
                 return;
             }
 
-            // Display unassigned equipment for selection
-            Console.WriteLine("Available Equipment to Assign:");
-            List<Equipment> unassignedEquipment = allEquipment_list.FindAll(e => !e.RoomNumber.HasValue && !e.AssignedStudentNationalCode.HasValue);
-            if (unassignedEquipment.Count == 0)
+            // ساخت لیست همه اتاق‌ها
+            List<(Room room, Block block, Dormitory dorm)> allRooms = new();
+            foreach (var dorm in dormitories_list)
             {
-                Console.WriteLine("No unassigned equipment available.");
+                if (dormBlocks.ContainsKey(dorm.Name))
+                {
+                    foreach (var block in dormBlocks[dorm.Name])
+                    {
+                        foreach (var room in block.Rooms)
+                        {
+                            allRooms.Add((room, block, dorm));
+                        }
+                    }
+                }
+            }
+
+            if (allRooms.Count == 0)
+            {
+                Console.WriteLine("No rooms available. Please add rooms first.");
                 Console.ReadKey();
                 return;
             }
 
-            for (int i = 0; i < unassignedEquipment.Count; i++)
+            
+            Console.WriteLine("Available Equipment:");
+            for (int i = 0; i < unassignedEquipments.Count; i++)
             {
-                Console.WriteLine($"{i + 1}. {unassignedEquipment[i].Type} (ID: {unassignedEquipment[i].EquipmentId})");
+                var eq = unassignedEquipments[i];
+                //Console.WriteLine($"{i + 1}. ID: {eq.EquipmentId} | Type: {eq.Type} | Part: {eq.PartNumber} | Status: {eq.status}");
+                Console.WriteLine($"{i + 1}. ID: {eq.EquipmentId.ToString("D8")} | Type: {eq.Type} | Part: {eq.PartNumber} | Status: {eq.status}");
+
             }
 
-            Console.Write("Select equipment number to assign: ");
-            if (!int.TryParse(Console.ReadLine(), out int equipChoice) || equipChoice <= 0 || equipChoice > unassignedEquipment.Count)
+            Console.Write("Select the number of equipment to assign: ");
+            if (!int.TryParse(Console.ReadLine(), out int selectedEquipIndex) || selectedEquipIndex < 1 || selectedEquipIndex > unassignedEquipments.Count)
             {
-                Console.WriteLine("Invalid selection.");
-                Console.ReadKey();
-                return;
-            }
-            Equipment selectedEquipment = unassignedEquipment[equipChoice - 1];
-
-            Console.Write("Enter Target Room Number: ");
-            if (!int.TryParse(Console.ReadLine(), out int targetRoomNumber))
-            {
-                Console.WriteLine("Invalid Room Number.");
+                Console.WriteLine("Invalid equipment selection.");
                 Console.ReadKey();
                 return;
             }
 
-            // In a full implementation, you would check if the room exists and has capacity[cite: 303].
-            // For this example, we'll just assign it directly.
-            selectedEquipment.RoomNumber = targetRoomNumber;
-            Console.WriteLine($"Equipment {selectedEquipment.Type} (ID: {selectedEquipment.EquipmentId}) assigned to Room {targetRoomNumber}.");
+            Equipment selectedEquipment = unassignedEquipments[selectedEquipIndex - 1];
+
+            
+            Console.WriteLine("\nAvailable Rooms:");
+            for (int i = 0; i < allRooms.Count; i++)
+            {
+                var entry = allRooms[i];
+                Console.WriteLine($"{i + 1}. Room {entry.room.RoomNumber} - Block: {entry.block.BlockName}, Dorm: {entry.dorm.Name}");
+            }
+
+            Console.Write("Select the room number to assign equipment: ");
+            if (!int.TryParse(Console.ReadLine(), out int selectedRoomIndex) || selectedRoomIndex < 1 || selectedRoomIndex > allRooms.Count)
+            {
+                Console.WriteLine("Invalid room selection.");
+                Console.ReadKey();
+                return;
+            }
+
+            var selectedRoom = allRooms[selectedRoomIndex - 1].room;
+
+            
+            selectedEquipment.RoomNumber = selectedRoom.RoomNumber;
+            selectedRoom.Equipments.Add(selectedEquipment);
+
+            Console.WriteLine($"Equipment ID {selectedEquipment.EquipmentId} assigned to Room {selectedRoom.RoomNumber}.");
             Console.ReadKey();
         }
+
+
+
 
         // 4 => 3: Assign Personal Equipment to Student [cite: 228]
         static void AssignPersonalEquipmentToStudent()
@@ -1558,8 +1960,8 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("--- Manage Equipment Movement ---");
 
-            Console.WriteLine("1. Move Equipment Between Rooms"); // ثبت جابجایی تجهیزات بین اتاق ها [cite: 233]
-            Console.WriteLine("2. Exchange Student's Personal Equipment"); // ثبت تعویض تجهیزات دانشجویان [cite: 234]
+            Console.WriteLine("1. Move Equipment Between Rooms"); 
+            Console.WriteLine("2. Exchange Student's Personal Equipment"); 
             Console.WriteLine("0. Back");
 
             Console.Write("\nSelect an option: ");
@@ -1586,15 +1988,32 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("--- Move Equipment Between Rooms ---");
 
-            if (allEquipment_list.Count == 0)
+            //  Creating a list of real rooms
+            List<(Room room, Block block, Dormitory dorm)> allRooms = new();
+            foreach (var dorm in dormitories_list)
             {
-                Console.WriteLine("No equipment registered.");
+                if (dormBlocks.ContainsKey(dorm.Name))
+                {
+                    foreach (var block in dormBlocks[dorm.Name])
+                    {
+                        foreach (var room in block.Rooms)
+                        {
+                            allRooms.Add((room, block, dorm));
+                        }
+                    }
+                }
+            }
+
+            
+            if (allRooms.Count < 2)
+            {
+                Console.WriteLine("At least two rooms are required to move equipment.");
                 Console.ReadKey();
                 return;
             }
 
-            Console.WriteLine("Select equipment to move:");
-            List<Equipment> roomEquipment = allEquipment_list.FindAll(e => e.RoomNumber.HasValue);
+            
+            var roomEquipment = allEquipment_list.Where(e => e.RoomNumber.HasValue).ToList();
             if (roomEquipment.Count == 0)
             {
                 Console.WriteLine("No equipment currently assigned to rooms.");
@@ -1602,33 +2021,53 @@ namespace DormitoryManagement
                 return;
             }
 
+            
+            Console.WriteLine("Select equipment to move:");
             for (int i = 0; i < roomEquipment.Count; i++)
             {
-                Console.WriteLine($"{i + 1}. {roomEquipment[i].Type} (ID: {roomEquipment[i].EquipmentId}) - Current Room: {roomEquipment[i].RoomNumber}");
+                Console.WriteLine($"{i + 1}. {roomEquipment[i].Type} (ID: {roomEquipment[i].EquipmentId.ToString("D8")}) - Current Room: {roomEquipment[i].RoomNumber}");
             }
 
             Console.Write("Enter equipment number: ");
-            if (!int.TryParse(Console.ReadLine(), out int equipChoice) || equipChoice <= 0 || equipChoice > roomEquipment.Count)
+            if (!int.TryParse(Console.ReadLine(), out int equipChoice) || equipChoice < 1 || equipChoice > roomEquipment.Count)
             {
                 Console.WriteLine("Invalid selection.");
                 Console.ReadKey();
                 return;
             }
+
             Equipment selectedEquipment = roomEquipment[equipChoice - 1];
 
-            Console.Write($"Enter New Room Number (current: {selectedEquipment.RoomNumber}): ");
-            if (!int.TryParse(Console.ReadLine(), out int newRoomNumber))
+            // Select the destination room from the actual list
+            Console.WriteLine("\nSelect the destination room:");
+            for (int i = 0; i < allRooms.Count; i++)
             {
-                Console.WriteLine("Invalid Room Number.");
+                var entry = allRooms[i];
+                Console.WriteLine($"{i + 1}. Room {entry.room.RoomNumber} - Block: {entry.block.BlockName}, Dorm: {entry.dorm.Name}");
+            }
+
+            Console.Write("Enter destination room number: ");
+            if (!int.TryParse(Console.ReadLine(), out int roomIndex) || roomIndex < 1 || roomIndex > allRooms.Count)
+            {
+                Console.WriteLine("Invalid room selection.");
                 Console.ReadKey();
                 return;
             }
 
-            // Update the room number for the equipment
-            selectedEquipment.RoomNumber = newRoomNumber;
-            Console.WriteLine($"Equipment {selectedEquipment.Type} (ID: {selectedEquipment.EquipmentId}) moved to Room {newRoomNumber}.");
+            Room newRoom = allRooms[roomIndex - 1].room;
+
+            
+            
+            Room currentRoom = allRooms.Find(r => r.room.RoomNumber == selectedEquipment.RoomNumber).room;
+            currentRoom.Equipments.Remove(selectedEquipment);
+
+            newRoom.Equipments.Add(selectedEquipment);
+            selectedEquipment.RoomNumber = newRoom.RoomNumber;
+
+            Console.WriteLine($"Equipment {selectedEquipment.Type} (ID: {selectedEquipment.EquipmentId.ToString("D8")}) moved to Room {newRoom.RoomNumber}.");
             Console.ReadKey();
         }
+
 
         static void ExchangeStudentsPersonalEquipment()
         {
@@ -1707,9 +2146,9 @@ namespace DormitoryManagement
             Console.Clear();
             Console.WriteLine("--- Manage Repairs ---");
 
-            Console.WriteLine("1. Submit Repair Request (by Part Number)"); // ثبت درخواست تعمیرات از طریق پارت نامبر 
-            Console.WriteLine("2. Track Repair Status"); // پیگیری وضعیت تعمیرات 
-            Console.WriteLine("3. Mark Equipment as Faulty"); // ثبت تجهیزات معیوب 
+            Console.WriteLine("1. Submit Repair Request (by Part Number)"); 
+            Console.WriteLine("2. Track Repair Status"); 
+            Console.WriteLine("3. Mark Equipment as Faulty"); 
             Console.WriteLine("4. Mark Equipment as Healthy (Repaired)");
             Console.WriteLine("0. Back");
 
@@ -1906,9 +2345,9 @@ namespace DormitoryManagement
             {
                 Console.Clear();
                 Console.WriteLine("==== Reports ====");
-                Console.WriteLine("1. Accommodation Status Report"); // گزارش وضعیت اسکان [cite: 241]
-                Console.WriteLine("2. Property Report"); // گزارش اموال [cite: 246]
-                Console.WriteLine("3. Specialized Reports"); // گزارش های تخصصی 
+                Console.WriteLine("1. Accommodation Status Report"); 
+                Console.WriteLine("2. Property Report"); 
+                Console.WriteLine("3. Specialized Reports"); 
                 Console.WriteLine("0. Back to Main Menu");
 
                 Console.Write("\nSelect an option: ");
@@ -2005,7 +2444,7 @@ namespace DormitoryManagement
                 }
             }
 
-            Console.WriteLine("\n--- Equipment Assigned to Rooms ---"); 
+            Console.WriteLine("\n--- Equipment Assigned to Rooms ---");
             var roomAssignedEquipment = allEquipment_list.Where(e => e.RoomNumber.HasValue).ToList();
             if (roomAssignedEquipment.Count == 0)
             {
